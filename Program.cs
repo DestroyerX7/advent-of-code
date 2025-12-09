@@ -92,9 +92,12 @@ public class Program
         Stopwatch stopwatch = Stopwatch.StartNew();
 
         object partOneAnswer = solver.SolvePartOne(input);
+        double partOneTime = stopwatch.ElapsedMilliseconds / 1000d;
+
         object partTwoAnswer = solver.SolvePartTwo(input);
 
         stopwatch.Stop();
+        double partTwoTime = stopwatch.ElapsedMilliseconds / 1000d - partOneTime;
 
         Console.ForegroundColor = ConsoleColor.Green;
         Console.WriteLine($"Day {solver.GetDay()} : {solver.GetName()}");
@@ -114,7 +117,9 @@ public class Program
         Console.WriteLine(partTwoAnswer);
 
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("Solved in " + stopwatch.ElapsedMilliseconds / 1000d + "s");
+        Console.WriteLine("Solved part one in " + partOneTime + "s");
+        Console.WriteLine("Solved part two in " + partTwoTime + "s");
+        Console.WriteLine("Solved both parts in " + stopwatch.ElapsedMilliseconds / 1000d + "s");
 
         Console.ResetColor();
         Console.Write("");

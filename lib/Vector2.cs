@@ -7,6 +7,8 @@ public struct Vector2(int x, int y) : IEquatable<Vector2>
     public int X = x;
     public int Y = y;
 
+    public readonly double Magnitude => Math.Sqrt(Math.Pow(X, 2) + Math.Pow(Y, 2));
+
     public static readonly Vector2 Up = new(0, 1);
     public static readonly Vector2 Down = new(0, -1);
     public static readonly Vector2 Left = new(-1, 0);

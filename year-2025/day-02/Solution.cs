@@ -40,6 +40,7 @@ public class Solution : Solver
             long startIndex = long.Parse(split[0]);
             long endIndex = long.Parse(split[1]);
 
+            // I will try to fix the brute force and use math
             for (long i = startIndex; i <= endIndex; i++)
             {
                 string currentIndex = i.ToString();
