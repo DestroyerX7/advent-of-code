@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 
 namespace AdventOfCode.Year2025.Day02;
 
-[ProblemName("Gift Shop")]
+[PuzzleName("Gift Shop")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)

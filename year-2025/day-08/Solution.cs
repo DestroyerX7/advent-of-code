@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using AdventOfCode.Lib;
 
 namespace AdventOfCode.Year2025.Day08;
 
-[ProblemName("Playground")]
+[PuzzleName("Playground")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)

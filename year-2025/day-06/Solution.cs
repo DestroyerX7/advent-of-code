@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace AdventOfCode.Year2025.Day06;
 
-[ProblemName("Trash Compactor")]
+[PuzzleName("Trash Compactor")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)

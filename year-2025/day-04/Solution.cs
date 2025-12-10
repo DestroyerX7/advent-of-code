@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace AdventOfCode.Year2025.Day04;
 
-[ProblemName("Printing Department")]
+[PuzzleName("Printing Department")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace AdventOfCode.Year2025.Day03;
 
-[ProblemName("Lobby")]
+[PuzzleName("Lobby")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)

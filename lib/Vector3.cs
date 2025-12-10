@@ -1,6 +1,6 @@
 using System;
 
-namespace AdventOfCode;
+namespace AdventOfCode.Lib;
 
 public struct Vector3(int x, int y, int z) : IEquatable<Vector3>
 {

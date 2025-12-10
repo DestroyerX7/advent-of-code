@@ -1,13 +1,15 @@
-[ProblemName("")]
+namespace AdventOfCode.Year2025.Day10;
+
+[PuzzleName("")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)
     {
-        throw new System.NotImplementedException();
+        return "Not Attempted Yet";
     }
 
     public override object SolvePartTwo(string[] input)
     {
-        throw new System.NotImplementedException();
+        return "Not Attempted Yet";
     }
 }

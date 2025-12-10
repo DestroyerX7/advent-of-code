@@ -1,6 +1,6 @@
 namespace AdventOfCode.Year2025.Day01;
 
-[ProblemName("Secret Entrance")]
+[PuzzleName("Secret Entrance")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)

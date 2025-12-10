@@ -20,13 +20,13 @@ public abstract class Solver
 
     public string GetName()
     {
-        Attribute? attribute = GetType()?.GetCustomAttribute(typeof(ProblemName));
+        Attribute? attribute = GetType()?.GetCustomAttribute(typeof(PuzzleName));
 
         if (attribute == null)
         {
             return "NO NAME";
         }
 
-        return ((ProblemName)attribute).Name;
+        return ((PuzzleName)attribute).Name;
     }
 }

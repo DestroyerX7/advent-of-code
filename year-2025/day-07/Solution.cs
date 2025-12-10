@@ -1,8 +1,9 @@
 using System.Collections.Generic;
+using AdventOfCode.Lib;
 
 namespace AdventOfCode.Year2025.Day07;
 
-[ProblemName("Laboratories")]
+[PuzzleName("Laboratories")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)

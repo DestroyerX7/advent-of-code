@@ -2,13 +2,18 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Threading.Tasks;
+using AdventOfCode.Lib;
 
 namespace AdventOfCode;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static readonly HttpClient _httpClient = new();
+
+    private static async Task Main(string[] args)
     {
         DateTime utcNow = DateTime.UtcNow.AddHours(-5);
 
@@ -32,17 +37,31 @@ public class Program
                 day = args[2];
             }
 
-            string folderPath = $"year-{year}/day-{day}";
+            string folderPath = Path.Combine($"year-{year}", $"day-{day}");
 
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
-                File.Create(folderPath + "/input.in");
 
-                string solutionTemplate = File.ReadAllText("SolutionTemplate.txt");
+                string solutionPath = Path.Combine(folderPath, "Solution.cs");
 
-                File.WriteAllText(folderPath + "/Solution.cs", $"namespace AdventOfCode.Year{year}.Day{day};\n\n");
-                File.AppendAllText(folderPath + "/Solution.cs", solutionTemplate);
+                File.WriteAllText(solutionPath, SolutionGenerator.GenerateSolutionTemplate(year, day));
+
+                string inputUrl = $"https://adventofcode.com/{year}/day/{day.TrimStart('0')}/input";
+                string session = File.ReadAllText(".env").Split('=')[1];
+                _httpClient.DefaultRequestHeaders.Add("Cookie", $"session={session}");
+                HttpResponseMessage response = await _httpClient.GetAsync(inputUrl);
+
+                string body = "";
+
+                if (response.IsSuccessStatusCode)
+                {
+                    body = await response.Content.ReadAsStringAsync();
+                    body = body.TrimEnd('\r', '\n');
+                }
+
+                string inputPath = Path.Combine(folderPath, "input.in");
+                File.WriteAllText(inputPath, body);
             }
         }
         else
