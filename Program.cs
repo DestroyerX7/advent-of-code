@@ -73,7 +73,7 @@ public partial class Program
                     }
                     else
                     {
-                        Console.WriteLine("❌ Failed to get input from AoC website. Make sure ADVENT_OF_CODE_SESSION is set correctly and the year/day entered is correct.");
+                        Console.WriteLine("❌ Failed to get input from AoC website. Make sure ADVENT_OF_CODE_SESSION is set correctly, and the year/day entered is correct.");
                     }
                 }
 

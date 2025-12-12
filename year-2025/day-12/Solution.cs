@@ -1,6 +1,6 @@
 namespace AdventOfCode.Year2025.Day12;
 
-[PuzzleName("")]
+[PuzzleName("Christmas Tree Farm")]
 public class Solution : Solver
 {
     public override object SolvePartOne(string[] input)
