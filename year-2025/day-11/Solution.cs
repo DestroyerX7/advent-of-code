@@ -1,0 +1,148 @@
+using System.Collections.Generic;
+using System.Linq;
+
+namespace AdventOfCode.Year2025.Day11;
+
+[PuzzleName("Reactor")]
+public class Solution : Solver
+{
+    public override object SolvePartOne(string[] input)
+    {
+        Dictionary<string, Device> deviceDict = new()
+        {
+            { "out", new("out") },
+        };
+
+        foreach (string line in input)
+        {
+            int colonIndex = line.IndexOf(':');
+
+            string deviceName = line[..colonIndex];
+            Device device = new(deviceName);
+            deviceDict.Add(deviceName, device);
+        }
+
+        foreach (string line in input)
+        {
+            int colonIndex = line.IndexOf(':');
+            string deviceName = line[..colonIndex];
+
+            string[] outputNames = line[(colonIndex + 2)..].Split(' ');
+
+            foreach (string outputName in outputNames)
+            {
+                deviceDict[deviceName].AddOutputDevice(deviceDict[outputName]);
+            }
+        }
+
+        return deviceDict["you"].GetPathsToOut([]);
+    }
+
+    public override object SolvePartTwo(string[] input)
+    {
+        Dictionary<string, Device> deviceDict = new()
+        {
+            { "out", new("out") },
+        };
+
+        foreach (string line in input)
+        {
+            int colonIndex = line.IndexOf(':');
+
+            string deviceName = line[..colonIndex];
+            Device device = new(deviceName);
+            deviceDict.Add(deviceName, device);
+        }
+
+        foreach (string line in input)
+        {
+            int colonIndex = line.IndexOf(':');
+            string deviceName = line[..colonIndex];
+
+            string[] outputNames = line[(colonIndex + 2)..].Split(' ');
+
+            foreach (string outputName in outputNames)
+            {
+                deviceDict[deviceName].AddOutputDevice(deviceDict[outputName]);
+            }
+        }
+
+        return deviceDict["svr"].GetPathsToOutPartTwo([]);
+    }
+}
+
+public class Device(string name)
+{
+    public string Name = name;
+    public HashSet<Device> Outputs = [];
+    private long _pathToOut = -1;
+
+    private long _pathToOutPartTwo = -1;
+
+    public void AddOutputDevice(Device device)
+    {
+        Outputs.Add(device);
+    }
+
+    public long GetPathsToOut(HashSet<Device> currentPath)
+    {
+        if (_pathToOut != -1)
+        {
+            return _pathToOut;
+        }
+
+        long num = 0;
+
+        foreach (Device device in Outputs)
+        {
+            if (device.Name == "out")
+            {
+                num++;
+            }
+            else if (!currentPath.Contains(device))
+            {
+                num += device.GetPathsToOut([.. currentPath, this]);
+            }
+        }
+
+        _pathToOut = num;
+        return _pathToOut;
+    }
+
+    public long GetPathsToOutPartTwo(HashSet<Device> currentPath)
+    {
+        if (_pathToOutPartTwo != -1)
+        {
+            return _pathToOutPartTwo;
+        }
+
+        long num = 0;
+
+        foreach (Device device in Outputs)
+        {
+            if (device.Name == "out" && currentPath.Any(d => d.Name == "fft") && currentPath.Any(d => d.Name == "dac"))
+            {
+                num++;
+            }
+            else if (!currentPath.Contains(device))
+            {
+                num += device.GetPathsToOutPartTwo([.. currentPath, this]);
+            }
+        }
+
+        _pathToOutPartTwo = num;
+        return num;
+    }
+
+    public override string ToString()
+    {
+        string output = $"{Name}: ";
+
+        foreach (Device device in Outputs)
+        {
+            output += device.Name + " ";
+        }
+
+        return output;
+    }
+}
