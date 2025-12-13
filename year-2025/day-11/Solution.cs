@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -77,7 +78,9 @@ public class Device(string name)
     public HashSet<Device> Outputs = [];
     private long _pathToOut = -1;
 
-    private long _pathToOutPartTwo = -1;
+    // private long _pathToOutPartTwo = -1;
+
+    // private List<HashSet<string>>? _yo = null;
 
     public void AddOutputDevice(Device device)
     {
@@ -109,29 +112,39 @@ public class Device(string name)
         return _pathToOut;
     }
 
-    public long GetPathsToOutPartTwo(HashSet<Device> currentPath)
+    public long GetPathsToOutPartTwo(HashSet<string> currentPath)
     {
-        if (_pathToOutPartTwo != -1)
-        {
-            return _pathToOutPartTwo;
-        }
+        // if (_yo != null)
+        // {
+        //     return _yo;
+        // }
 
         long num = 0;
+        // List<HashSet<string>> paths = [];
 
         foreach (Device device in Outputs)
         {
-            if (device.Name == "out" && currentPath.Any(d => d.Name == "fft") && currentPath.Any(d => d.Name == "dac"))
+            HashSet<string> hi = [.. currentPath, Name, device.Name];
+            if (device.Name == "out" /*&& hi.Contains("fft") && hi.Contains("dac")*/)
             {
+                // hi.ToList().ForEach(x => Console.Write(x + ", "));
+                // System.Console.WriteLine();
                 num++;
+                // paths.Add([.. currentPath, Name]);
             }
-            else if (!currentPath.Contains(device))
+            else if (!currentPath.Contains(Name))
             {
-                num += device.GetPathsToOutPartTwo([.. currentPath, this]);
+                num += device.GetPathsToOutPartTwo([.. currentPath, Name]);
+                // var yo = device.GetPathsToOutPartTwo([.. currentPath, Name]);
+
+                // paths = [.. paths.Concat(yo)];
             }
         }
 
-        _pathToOutPartTwo = num;
+        // _pathToOutPartTwo = num;
         return num;
+        // _yo = paths;
+        // return paths;
     }
 
     public override string ToString()

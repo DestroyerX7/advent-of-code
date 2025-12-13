@@ -10,118 +10,139 @@ public partial class Solution : Solver
 {
     private static readonly Regex _indicatorRegex = IndicatorRegex();
     private static readonly Regex _buttonRegex = ButtonRegex();
+    private static readonly Regex _joltageRegex = JoltageRegex();
 
     public override object SolvePartOne(string[] input)
     {
-        // List<int> nums = [1, 2, 3];
-        // var combos = GetCombinations(nums, 2);
-
-        // foreach (var combo in combos)
-        // {
-        //     foreach (int num in combo)
-        //     {
-        //         Console.Write(num + ", ");
-        //     }
-
-        //     System.Console.WriteLine();
-        // }
-
-        // return combos.Count;
-
-        // int[][] yo =
-        // {
-        //     [0,0,0,0,1,1,0],
-        //     [0,1,0,0,0,1,1],
-        //     [0,0,1,1,1,0,1],
-        //     [1,1,0,1,0,0,0],
-        //     // [0, 1, 0, 1],
-        //     // [1, 0, 1, 0],
-        //     // [1, 0, 0, 1],
-        //     // [0, 0, 1, 0],
-        //     // [1, 1, 0, 1],
-        //     // [0, 1, 1, 0],
-        //     // [1, 1, 1, 1],
-        // };
-
-        // AugmentedMatrix augmentedMatrix = new(yo);
-        // augmentedMatrix.Format();
-        // System.Console.WriteLine(augmentedMatrix);
-        // return augmentedMatrix.Solve();
+        int totalPresses = 0;
 
         foreach (string line in input)
         {
-            string indicator = _indicatorRegex.Match(line).ToString();
+            string indicator = _indicatorRegex.Match(line).ToString().Trim('[', ']');
             MatchCollection matchCollection = _buttonRegex.Matches(line);
 
-            string yo = "[";
-
-            for (int i = 0; i < indicator.Length - 2; i++)
-            {
-                yo += ".";
-            }
-
-            yo += "]";
-
-            if (yo == indicator)
-            {
-                continue;
-            }
-
             List<string> buttons = [];
-
             foreach (Match match in matchCollection)
             {
-                buttons.Add(match.ToString());
-            }
-
-            List<int> buttonNums = [];
-            for (int i = 0; i < buttonNums.Count; i++)
-            {
-                buttonNums.Add(i);
+                buttons.Add(match.ToString().Trim('(', ')'));
             }
 
             for (int i = 1; i < buttons.Count; i++)
             {
-                string hi = yo;
-                var combos = GetCombinations(buttonNums, i);
+                bool found = false;
+                List<List<string>> buttonCombos = GetCombinations(buttons, i);
 
-                foreach (List<int> combo in combos)
+                foreach (List<string> buttonCombo in buttonCombos)
                 {
-                    foreach (int num in combo)
-                    {
-                        List<int> nums = [.. buttons[num].ToString().Trim('(', ')').Split(',').Select(int.Parse)];
+                    string current = new('.', indicator.Length);
 
-                        if (hi[num + 1] == '.')
+                    foreach (string button in buttonCombo)
+                    {
+                        int[] nums = [.. button.Split(',').Select(int.Parse)];
+
+                        foreach (int num in nums)
                         {
-                            hi = hi[..(num + 1)] + '#' + hi[(num + 2)..];
-                        }
-                        else
-                        {
-                            hi = hi[..(num + 1)] + '.' + hi[(num + 2)..];
+                            if (current[num] == '.')
+                            {
+                                current = current[..num] + "#" + current[(num + 1)..];
+                            }
+                            else
+                            {
+                                current = current[..num] + "." + current[(num + 1)..];
+                            }
                         }
                     }
 
-                    System.Console.WriteLine(hi);
-
-                    if (hi == indicator)
+                    if (current == indicator)
                     {
-                        System.Console.WriteLine("mathc " + i);
+                        totalPresses += i;
+                        found = true;
+                        break;
                     }
+                }
+
+                if (found)
+                {
+                    break;
                 }
             }
         }
 
-        return "Not Attempted Yet";
+        return totalPresses;
     }
 
     public override object SolvePartTwo(string[] input)
     {
-        return "Not Attempted Yet";
+        long totalPresses = 0;
+
+        foreach (string line in input)
+        {
+            MatchCollection matchCollection = _buttonRegex.Matches(line);
+
+            List<string> buttons = [];
+            foreach (Match match in matchCollection)
+            {
+                buttons.Add(match.ToString().Trim('(', ')'));
+            }
+
+            int[] joltageNums = [.. _joltageRegex.Match(line).ToString().Trim('{', '}').Split(',').Select(int.Parse)];
+
+            int[][] matrix = new int[joltageNums.Length][];
+
+            for (int y = 0; y < joltageNums.Length; y++)
+            {
+                matrix[y] = new int[buttons.Count + 1];
+                matrix[y][buttons.Count] = joltageNums[y];
+            }
+
+            for (int x = 0; x < buttons.Count; x++)
+            {
+                int[] nums = [.. buttons[x].Split(',').Select(int.Parse)];
+
+                foreach (int num in nums)
+                {
+                    matrix[num][x] = 1;
+                }
+            }
+
+            AugmentedMatrix augmentedMatrix = new(matrix);
+            augmentedMatrix.RowReduce();
+
+            List<string> equations = augmentedMatrix.GetEquation();
+
+            var yo = FindMin(equations);
+
+            totalPresses += yo.Item1;
+        }
+
+        return totalPresses;
+
+        // int[][] matrix =
+        // {
+        //     // [1, 0, 1, 1],
+        //     // [1, 1, 0, 0],
+        //     // [0, 0, 1, 0],
+        //     [0,0,0,0,1,1,3],
+        //     [0,1,0,0,0,1,5],
+        //     [0,0,1,1,1,0,4],
+        //     [1,1,0,1,0,0,7],
+        // };
+
+        // AugmentedMatrix augmentedMatrix = new(matrix);
+        // augmentedMatrix.RowReduce();
+
+        // System.Console.WriteLine(augmentedMatrix);
+
+        // List<string> equations = augmentedMatrix.GetEquation();
+
+        // var yo = FindMin(equations);
+
+        // return yo.Item1;
     }
 
-    private static List<List<int>> GetCombinations(List<int> original, int size)
+    private static List<List<T>> GetCombinations<T>(List<T> original, int size)
     {
-        List<List<int>> combos = [];
+        List<List<T>> combos = [];
 
         if (size == 0)
         {
@@ -129,33 +150,87 @@ public partial class Solution : Solver
         }
         if (size == 1)
         {
-            foreach (int num in original)
+            foreach (T item in original)
             {
-                combos.Add([num]);
+                combos.Add([item]);
             }
 
             return combos;
         }
 
-        for (int i = original.Count - 1; i >= 0; i--)
+        for (int i = 0; i < original.Count; i++)
         {
-            List<int> copy = [.. original];
-            copy.RemoveAt(i);
+            List<List<T>> smallerCombos = GetCombinations([.. original.Skip(i + 1)], size - 1);
 
-            var yo = GetCombinations(copy, size - 1);
-
-            for (int j = 0; j < yo.Count; j++)
+            for (int j = 0; j < smallerCombos.Count; j++)
             {
-                yo[j] = [.. yo[j], original[i]];
+                smallerCombos[j] = [original[i], .. smallerCombos[j]];
             }
 
-            foreach (var hi in yo)
-            {
-                combos.Add(hi);
-            }
+            combos = [.. combos.Concat(smallerCombos)];
         }
 
         return combos;
+    }
+
+    private static (int, bool) FindMin(List<string> strings)
+    {
+        HashSet<string> freeVars = [];
+
+        foreach (string equation in strings)
+        {
+            Regex regex = new(@"x\d+");
+            MatchCollection matchCollection = regex.Matches(equation);
+
+            foreach (Match match in matchCollection)
+            {
+                freeVars.Add(match.ToString());
+            }
+        }
+
+        if (freeVars.Count == 0)
+        {
+            int sum = 0;
+
+            foreach (string equation in strings)
+            {
+                int total = equation.Split(' ').Select(int.Parse).Aggregate((a, b) => a + b);
+
+                if (total < 0)
+                {
+                    return (-1, false);
+                }
+
+                sum += total;
+            }
+
+            return (sum, true);
+        }
+
+        int min = int.MaxValue - 10000;
+
+        for (int i = 0; i < 5; i++)
+        {
+            string freeVar = freeVars.ToArray()[0];
+
+            List<string> copy = [.. strings];
+
+            for (int j = 0; j < copy.Count; j++)
+            {
+                copy[j] = copy[j].Replace(freeVar, i.ToString());
+            }
+
+            var yo = FindMin(copy);
+
+            int hi = yo.Item1 + i;
+
+            if (yo.Item2 && hi < min)
+            {
+                min = hi;
+            }
+        }
+
+        return (min, true);
     }
 
     [GeneratedRegex(@"\[[\.#]+\]")]
@@ -163,6 +238,9 @@ public partial class Solution : Solver
 
     [GeneratedRegex(@"\([\d,]*\d\)")]
     private static partial Regex ButtonRegex();
+
+    [GeneratedRegex(@"{[\d,]*\d}")]
+    private static partial Regex JoltageRegex();
 }
 
 public class AugmentedMatrix
@@ -183,74 +261,93 @@ public class AugmentedMatrix
         _cols = augmentedMatrix[0].Length;
     }
 
-    public void Format()
+    public void RowReduce()
     {
-        for (int x = 0; x < _cols - 1; x++)
+        for (int pivotRow = 0; pivotRow < _rows; pivotRow++)
         {
-            // System.Console.WriteLine(this);
+            int pivotIndex = -1;
 
-            int pivotIndex = 4;
-
-            for (int y = x; y < _rows; y++)
+            for (int x = pivotRow; x < _cols - 1 && pivotIndex == -1; x++)
             {
-                if (_augmentedMatrix[y][x] != 0)
+                for (int y = pivotRow; y < _rows && pivotIndex == -1; y++)
                 {
-                    int div = _augmentedMatrix[y][x];
-
-                    for (int i = 0; i < _cols; i++)
+                    if (_augmentedMatrix[y][x] != 0)
                     {
-                        _augmentedMatrix[y][i] /= div;
+                        int inverse = 1 / _augmentedMatrix[y][x];
+
+                        MultiplyRow(y, inverse);
+                        SwapRows(y, pivotRow);
+
+                        pivotIndex = x;
+                    }
+                }
+            }
+
+            if (pivotIndex != -1)
+            {
+                for (int y = 0; y < _rows; y++)
+                {
+                    if (y == pivotRow)
+                    {
+                        continue;
                     }
 
-                    SwapRows(x, y);
-                    break;
-                }
-            }
+                    int val = _augmentedMatrix[y][pivotIndex];
 
-            for (int y = 0; y < _rows; y++)
-            {
-                if (y == x || x >= _rows)
-                {
-                    continue;
-                }
-
-                int sub;
-                // System.Console.WriteLine(x);
-                if (_augmentedMatrix[x][x] == 0)
-                {
-                    sub = _augmentedMatrix[y][x] / _augmentedMatrix[x][pivotIndex];
-                }
-                else
-                {
-                    sub = _augmentedMatrix[y][x] / _augmentedMatrix[x][x];
-                }
-
-                for (int i = x; i < _cols; i++)
-                {
-                    _augmentedMatrix[y][i] -= sub * _augmentedMatrix[x][i];
+                    for (int x = pivotIndex; x < _cols; x++)
+                    {
+                        _augmentedMatrix[y][x] -= val * _augmentedMatrix[pivotRow][x];
+                    }
                 }
             }
         }
     }
 
-    public int Solve()
-    {
-        int sum = 0;
-
-        for (int y = 0; y < _rows; y++)
-        {
-            if (_augmentedMatrix[y][_cols - 1] != 0)
-            {
-                sum++;
-            }
-        }
-
-        return sum;
-    }
-
-    public void SwapRows(int indexOne, int indexTwo)
+    private void SwapRows(int indexOne, int indexTwo)
     {
         (_augmentedMatrix[indexTwo], _augmentedMatrix[indexOne]) = (_augmentedMatrix[indexOne], _augmentedMatrix[indexTwo]);
+    }
+
+    private void MultiplyRow(int y, double multiplier)
+    {
+        for (int x = 0; x < _cols; x++)
+        {
+            _augmentedMatrix[y][x] = (int)(_augmentedMatrix[y][x] * multiplier);
+        }
+    }
+
+    public List<string> GetEquation()
+    {
+        List<string> equations = [];
+
+        for (int y = _rows - 1; y >= 0; y--)
+        {
+            bool foundPivot = false;
+
+            string equation = "";
+
+            for (int x = 0; x < _cols - 1; x++)
+            {
+                if (_augmentedMatrix[y][x] != 0 && !foundPivot)
+                {
+                    equation += $"{_augmentedMatrix[y][_cols - 1]} ";
+                    foundPivot = true;
+                }
+                else if (_augmentedMatrix[y][x] != 0)
+                {
+                    equation += _augmentedMatrix[y][x] > 0 ? "-" : "+";
+
+                    equation += $"x{x} ";
+                }
+            }
+
+            if (!string.IsNullOrEmpty(equation))
+            {
+                equations.Add(equation.Trim());
+            }
+        }
+
+        return equations;
     }
 
     public override string ToString()
