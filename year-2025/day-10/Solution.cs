@@ -11,6 +11,7 @@ public partial class Solution : Solver
     private static readonly Regex _indicatorRegex = IndicatorRegex();
     private static readonly Regex _buttonRegex = ButtonRegex();
     private static readonly Regex _joltageRegex = JoltageRegex();
+    private static readonly Regex _equationVarRegex = EquationVarRegex();
 
     public override object SolvePartOne(string[] input)
     {
@@ -87,11 +88,11 @@ public partial class Solution : Solver
 
             int[] joltageNums = [.. _joltageRegex.Match(line).ToString().Trim('{', '}').Split(',').Select(int.Parse)];
 
-            int[][] matrix = new int[joltageNums.Length][];
+            double[][] matrix = new double[joltageNums.Length][];
 
             for (int y = 0; y < joltageNums.Length; y++)
             {
-                matrix[y] = new int[buttons.Count + 1];
+                matrix[y] = new double[buttons.Count + 1];
                 matrix[y][buttons.Count] = joltageNums[y];
             }
 
@@ -106,38 +107,38 @@ public partial class Solution : Solver
             }
 
             AugmentedMatrix augmentedMatrix = new(matrix);
+
+            string original = augmentedMatrix.ToString();
+
             augmentedMatrix.RowReduce();
 
-            List<string> equations = augmentedMatrix.GetEquation();
+            augmentedMatrix.SetMul();
 
-            var yo = FindMin(equations);
+            // if (!augmentedMatrix.IsConsistent())
+            // {
+            // System.Console.WriteLine(line);
+            // System.Console.WriteLine();
 
-            totalPresses += yo.Item1;
+            // System.Console.WriteLine(original);
+            // System.Console.WriteLine();
+
+            // System.Console.WriteLine("Reduced: ");
+            // System.Console.WriteLine(augmentedMatrix);
+            // System.Console.WriteLine();
+
+            List<string> equations = augmentedMatrix.GetEquations();
+
+            // equations.ForEach(Console.WriteLine);
+            // System.Console.WriteLine();
+            // }
+
+            int maxTest = joltageNums.Max();
+            long min = FindMin(equations, augmentedMatrix.Mul, maxTest);
+            totalPresses += min;
+            // return totalPresses;
         }
 
         return totalPresses;
-
-        // int[][] matrix =
-        // {
-        //     // [1, 0, 1, 1],
-        //     // [1, 1, 0, 0],
-        //     // [0, 0, 1, 0],
-        //     [0,0,0,0,1,1,3],
-        //     [0,1,0,0,0,1,5],
-        //     [0,0,1,1,1,0,4],
-        //     [1,1,0,1,0,0,7],
-        // };
-
-        // AugmentedMatrix augmentedMatrix = new(matrix);
-        // augmentedMatrix.RowReduce();
-
-        // System.Console.WriteLine(augmentedMatrix);
-
-        // List<string> equations = augmentedMatrix.GetEquation();
-
-        // var yo = FindMin(equations);
-
-        // return yo.Item1;
     }
 
     private static List<List<T>> GetCombinations<T>(List<T> original, int size)
@@ -173,14 +174,13 @@ public partial class Solution : Solver
         return combos;
     }
 
-    private static (int, bool) FindMin(List<string> strings)
+    private static long FindMin(List<string> equations, double mul, int maxTest)
     {
         HashSet<string> freeVars = [];
 
-        foreach (string equation in strings)
+        foreach (string equation in equations)
         {
-            Regex regex = new(@"x\d+");
-            MatchCollection matchCollection = regex.Matches(equation);
+            MatchCollection matchCollection = _equationVarRegex.Matches(equation);
 
             foreach (Match match in matchCollection)
             {
@@ -190,47 +190,53 @@ public partial class Solution : Solver
 
         if (freeVars.Count == 0)
         {
-            int sum = 0;
+            long sum = 0;
 
-            foreach (string equation in strings)
+            foreach (string equation in equations)
             {
-                int total = equation.Split(' ').Select(int.Parse).Aggregate((a, b) => a + b);
+                long total = equation.Split(' ').Select(x =>
+                {
+                    if (long.TryParse(x, out long num))
+                    {
+                        return (long)(num / mul);
+                    }
+                    else
+                    {
+                        int index = x.IndexOf('*');
+                        long coef = long.Parse(x[..index]);
+                        num = long.Parse(x[(index + 1)..]);
+                        return (long)(coef * num / mul);
+                    }
+                }).Aggregate((a, b) => a + b);
 
                 if (total < 0)
                 {
-                    return (-1, false);
+                    return total;
                 }
 
                 sum += total;
             }
 
-            return (sum, true);
+            return sum;
         }
 
-        int min = int.MaxValue - 10000;
+        long min = long.MaxValue - maxTest;
 
-        for (int i = 0; i < 5; i++)
+        for (long i = 0; i <= maxTest; i++)
         {
-            string freeVar = freeVars.ToArray()[0];
+            string freeVar = freeVars.First();
 
-            List<string> copy = [.. strings];
+            List<string> replaced = [.. equations.Select(e => e.Replace(freeVar, i.ToString()))];
 
-            for (int j = 0; j < copy.Count; j++)
+            long result = FindMin(replaced, mul, maxTest);
+
+            if (result >= 0 && result + i < min)
             {
-                copy[j] = copy[j].Replace(freeVar, i.ToString());
-            }
-
-            var yo = FindMin(copy);
-
-            int hi = yo.Item1 + i;
-
-            if (yo.Item2 && hi < min)
-            {
-                min = hi;
+                min = result + i;
             }
         }
 
-        return (min, true);
+        return min;
     }
 
     [GeneratedRegex(@"\[[\.#]+\]")]
@@ -241,15 +247,21 @@ public partial class Solution : Solver
 
     [GeneratedRegex(@"{[\d,]*\d}")]
     private static partial Regex JoltageRegex();
+
+    [GeneratedRegex(@"x_\d+")]
+    private static partial Regex EquationVarRegex();
 }
 
 public class AugmentedMatrix
 {
-    private readonly int[][] _augmentedMatrix;
+    private readonly double[][] _augmentedMatrix;
     private readonly int _rows;
     private readonly int _cols;
 
-    public AugmentedMatrix(int[][] augmentedMatrix)
+    private readonly List<double> _yo = [];
+    public double Mul = 1;
+
+    public AugmentedMatrix(double[][] augmentedMatrix)
     {
         if (augmentedMatrix[0].Length < 2)
         {
@@ -273,7 +285,7 @@ public class AugmentedMatrix
                 {
                     if (_augmentedMatrix[y][x] != 0)
                     {
-                        int inverse = 1 / _augmentedMatrix[y][x];
+                        double inverse = 1 / _augmentedMatrix[y][x];
 
                         MultiplyRow(y, inverse);
                         SwapRows(y, pivotRow);
@@ -292,12 +304,37 @@ public class AugmentedMatrix
                         continue;
                     }
 
-                    int val = _augmentedMatrix[y][pivotIndex];
+                    double val = _augmentedMatrix[y][pivotIndex];
 
                     for (int x = pivotIndex; x < _cols; x++)
                     {
                         _augmentedMatrix[y][x] -= val * _augmentedMatrix[pivotRow][x];
                     }
+                }
+            }
+        }
+    }
+
+    public void SetMul()
+    {
+        Mul = 1;
+
+        foreach (double num in _yo)
+        {
+            Mul *= 1 / Math.Abs(num);
+        }
+
+        Mul = double.Round(Mul, 3);
+
+        for (int y = 0; y < _rows; y++)
+        {
+            for (int x = 0; x < _cols; x++)
+            {
+                _augmentedMatrix[y][x] = double.Round(_augmentedMatrix[y][x] * Mul, 3);
+
+                if (_augmentedMatrix[y][x] == 0)
+                {
+                    _augmentedMatrix[y][x] = 0;
                 }
             }
         }
@@ -312,11 +349,13 @@ public class AugmentedMatrix
     {
         for (int x = 0; x < _cols; x++)
         {
-            _augmentedMatrix[y][x] = (int)(_augmentedMatrix[y][x] * multiplier);
+            _augmentedMatrix[y][x] = _augmentedMatrix[y][x] * multiplier;
+
+            _yo.Add(multiplier);
         }
     }
 
-    public List<string> GetEquation()
+    public List<string> GetEquations()
     {
         List<string> equations = [];
 
@@ -336,8 +375,7 @@ public class AugmentedMatrix
                 else if (_augmentedMatrix[y][x] != 0)
                 {
                     equation += _augmentedMatrix[y][x] > 0 ? "-" : "+";
-
-                    equation += $"x{x} ";
+                    equation += $"{Math.Abs(_augmentedMatrix[y][x])}*x_{x} ";
                 }
             }
 
@@ -348,6 +386,19 @@ public class AugmentedMatrix
         }
 
         return equations;
+    }
+
+    public bool IsConsistent()
+    {
+        for (int y = _augmentedMatrix.Length - 1; y >= 0; y--)
+        {
+            if (_augmentedMatrix[y][_cols - 1] != 0 && _augmentedMatrix[y].Take(_cols - 1).All(n => n == 0))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public override string ToString()
@@ -371,6 +422,6 @@ public class AugmentedMatrix
             output += "|\n";
         }
 
-        return output;
+        return output.Trim('\n');
     }
 }
