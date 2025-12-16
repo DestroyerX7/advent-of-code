@@ -41,6 +41,8 @@ public class Solution : Solver
 
     public override object SolvePartTwo(string[] input)
     {
+        return "Not Finished Yet";
+
         Dictionary<string, Device> deviceDict = new()
         {
             { "out", new("out") },
