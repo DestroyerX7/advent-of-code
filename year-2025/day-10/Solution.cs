@@ -108,34 +108,15 @@ public partial class Solution : Solver
 
             AugmentedMatrix augmentedMatrix = new(matrix);
 
-            string original = augmentedMatrix.ToString();
-
             augmentedMatrix.RowReduce();
-
             augmentedMatrix.SetMul();
-
-            // if (!augmentedMatrix.IsConsistent())
-            // {
-            // System.Console.WriteLine(line);
-            // System.Console.WriteLine();
-
-            // System.Console.WriteLine(original);
-            // System.Console.WriteLine();
-
-            // System.Console.WriteLine("Reduced: ");
-            // System.Console.WriteLine(augmentedMatrix);
-            // System.Console.WriteLine();
 
             List<string> equations = augmentedMatrix.GetEquations();
 
-            // equations.ForEach(Console.WriteLine);
-            // System.Console.WriteLine();
-            // }
-
             int maxTest = joltageNums.Max();
             long min = FindMin(equations, augmentedMatrix.Mul, maxTest);
+
             totalPresses += min;
-            // return totalPresses;
         }
 
         return totalPresses;
@@ -190,34 +171,37 @@ public partial class Solution : Solver
 
         if (freeVars.Count == 0)
         {
-            long sum = 0;
+            double sum = 0;
 
             foreach (string equation in equations)
             {
-                long total = equation.Split(' ').Select(x =>
+                double total = equation.Split(' ').Select(x =>
                 {
-                    if (long.TryParse(x, out long num))
+                    if (double.TryParse(x, out double num))
                     {
-                        return (long)(num / mul);
+                        return num / mul;
                     }
                     else
                     {
                         int index = x.IndexOf('*');
                         long coef = long.Parse(x[..index]);
-                        num = long.Parse(x[(index + 1)..]);
-                        return (long)(coef * num / mul);
+                        num = double.Parse(x[(index + 1)..]);
+
+                        return coef * num / mul;
                     }
                 }).Aggregate((a, b) => a + b);
 
-                if (total < 0)
+                total = double.Round(total, 3);
+
+                if (total < 0 || !double.IsInteger(total))
                 {
-                    return total;
+                    return -1;
                 }
 
                 sum += total;
             }
 
-            return sum;
+            return (long)sum;
         }
 
         long min = long.MaxValue - maxTest;

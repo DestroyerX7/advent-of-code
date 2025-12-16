@@ -139,6 +139,7 @@ public partial class Program
 
             // Console.WriteLine($"Year {year}");
             // Console.WriteLine();
+            WriteLine($"Day {solver.GetDay()} : {solver.GetName()}", ConsoleColor.Green);
 
             string inputPath = Path.Combine($"year-{year}", $"day-{day}", "input.in");
             string[] input = File.ReadAllLines(inputPath);
@@ -148,22 +149,21 @@ public partial class Program
             object partOneAnswer = solver.SolvePartOne(input);
             double partOneTime = stopwatch.ElapsedMilliseconds / 1000d;
 
+            Write("Part One : ", ConsoleColor.Magenta);
+            Write(partOneAnswer);
+            WriteLine($" ({partOneTime}s)", ConsoleColor.Cyan);
+
             object partTwoAnswer = solver.SolvePartTwo(input);
 
             stopwatch.Stop();
+
             double partTwoTime = stopwatch.ElapsedMilliseconds / 1000d - partOneTime;
 
-            WriteLine($"Day {solver.GetDay()} : {solver.GetName()}", ConsoleColor.Green);
-
-            Write("Part One : ", ConsoleColor.Magenta);
-            Console.WriteLine(partOneAnswer);
-
             Write("Part Two : ", ConsoleColor.Magenta);
-            Console.WriteLine(partTwoAnswer);
+            Write(partTwoAnswer);
+            WriteLine($" ({partTwoTime}s)", ConsoleColor.Cyan);
 
-            WriteLine("Solved part one in " + partOneTime + "s", ConsoleColor.Cyan);
-            WriteLine("Solved part two in " + partTwoTime + "s", ConsoleColor.Cyan);
-            WriteLine("Solved both parts in " + stopwatch.ElapsedMilliseconds / 1000d + "s", ConsoleColor.Cyan);
+            // WriteLine("Solved both parts in " + stopwatch.ElapsedMilliseconds / 1000d + "s", ConsoleColor.Cyan);
         }
     }
 
