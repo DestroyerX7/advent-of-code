@@ -74,7 +74,7 @@ public partial class Solution : Solver
 
     public override object SolvePartTwo(string[] input)
     {
-        long totalPresses = 0;
+        int totalPresses = 0;
 
         foreach (string line in input)
         {
@@ -107,14 +107,12 @@ public partial class Solution : Solver
             }
 
             AugmentedMatrix augmentedMatrix = new(matrix);
-
             augmentedMatrix.RowReduce();
-            augmentedMatrix.SetMul();
 
             List<string> equations = augmentedMatrix.GetEquations();
 
             int maxTest = joltageNums.Max();
-            long min = FindMin(equations, augmentedMatrix.Mul, maxTest);
+            int min = FindMin(equations, maxTest);
 
             totalPresses += min;
         }
@@ -155,7 +153,7 @@ public partial class Solution : Solver
         return combos;
     }
 
-    private static long FindMin(List<string> equations, double mul, int maxTest)
+    private static int FindMin(List<string> equations, int maxTest)
     {
         HashSet<string> freeVars = [];
 
@@ -171,7 +169,7 @@ public partial class Solution : Solver
 
         if (freeVars.Count == 0)
         {
-            double sum = 0;
+            int sum = 0;
 
             foreach (string equation in equations)
             {
@@ -179,15 +177,12 @@ public partial class Solution : Solver
                 {
                     if (double.TryParse(x, out double num))
                     {
-                        return num / mul;
+                        return num;
                     }
                     else
                     {
-                        int index = x.IndexOf('*');
-                        long coef = long.Parse(x[..index]);
-                        num = double.Parse(x[(index + 1)..]);
-
-                        return coef * num / mul;
+                        double[] nums = [.. x.Split('*').Select(double.Parse)];
+                        return nums[0] * nums[1];
                     }
                 }).Aggregate((a, b) => a + b);
 
@@ -198,21 +193,21 @@ public partial class Solution : Solver
                     return -1;
                 }
 
-                sum += total;
+                sum += (int)total;
             }
 
-            return (long)sum;
+            return sum;
         }
 
-        long min = long.MaxValue - maxTest;
+        int min = int.MaxValue - maxTest;
 
-        for (long i = 0; i <= maxTest; i++)
+        for (int i = 0; i <= maxTest; i++)
         {
             string freeVar = freeVars.First();
 
             List<string> replaced = [.. equations.Select(e => e.Replace(freeVar, i.ToString()))];
 
-            long result = FindMin(replaced, mul, maxTest);
+            int result = FindMin(replaced, maxTest);
 
             if (result >= 0 && result + i < min)
             {
@@ -241,9 +236,6 @@ public class AugmentedMatrix
     private readonly double[][] _augmentedMatrix;
     private readonly int _rows;
     private readonly int _cols;
-
-    private readonly List<double> _yo = [];
-    public double Mul = 1;
 
     public AugmentedMatrix(double[][] augmentedMatrix)
     {
@@ -299,31 +291,6 @@ public class AugmentedMatrix
         }
     }
 
-    public void SetMul()
-    {
-        Mul = 1;
-
-        foreach (double num in _yo)
-        {
-            Mul *= 1 / Math.Abs(num);
-        }
-
-        Mul = double.Round(Mul, 3);
-
-        for (int y = 0; y < _rows; y++)
-        {
-            for (int x = 0; x < _cols; x++)
-            {
-                _augmentedMatrix[y][x] = double.Round(_augmentedMatrix[y][x] * Mul, 3);
-
-                if (_augmentedMatrix[y][x] == 0)
-                {
-                    _augmentedMatrix[y][x] = 0;
-                }
-            }
-        }
-    }
-
     private void SwapRows(int indexOne, int indexTwo)
     {
         (_augmentedMatrix[indexTwo], _augmentedMatrix[indexOne]) = (_augmentedMatrix[indexOne], _augmentedMatrix[indexTwo]);
@@ -334,8 +301,6 @@ public class AugmentedMatrix
         for (int x = 0; x < _cols; x++)
         {
             _augmentedMatrix[y][x] = _augmentedMatrix[y][x] * multiplier;
-
-            _yo.Add(multiplier);
         }
     }
 

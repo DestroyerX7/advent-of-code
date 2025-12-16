@@ -132,13 +132,24 @@ public partial class Program
             return;
         }
 
+        string previousYear = year;
+        WriteLine("Year " + year);
+        WriteLine();
+
         foreach (Solver solver in solvers)
         {
             year = solver.GetYear();
             day = solver.GetDay();
 
-            // Console.WriteLine($"Year {year}");
-            // Console.WriteLine();
+            if (year != previousYear)
+            {
+                WriteLine("Year " + year);
+                // WriteLine("==========");
+                WriteLine();
+            }
+
+            previousYear = year;
+
             WriteLine($"Day {solver.GetDay()} : {solver.GetName()}", ConsoleColor.Green);
 
             string inputPath = Path.Combine($"year-{year}", $"day-{day}", "input.in");
@@ -148,6 +159,7 @@ public partial class Program
 
             object partOneAnswer = solver.SolvePartOne(input);
             double partOneTime = stopwatch.ElapsedMilliseconds / 1000d;
+            partOneTime = double.Round(partOneTime, 3);
 
             Write("Part One : ", ConsoleColor.Magenta);
             Write(partOneAnswer);
@@ -158,11 +170,13 @@ public partial class Program
             stopwatch.Stop();
 
             double partTwoTime = stopwatch.ElapsedMilliseconds / 1000d - partOneTime;
+            partTwoTime = double.Round(partTwoTime, 3);
 
             Write("Part Two : ", ConsoleColor.Magenta);
             Write(partTwoAnswer);
             WriteLine($" ({partTwoTime}s)", ConsoleColor.Cyan);
 
+            WriteLine();
             // WriteLine("Solved both parts in " + stopwatch.ElapsedMilliseconds / 1000d + "s", ConsoleColor.Cyan);
         }
     }
