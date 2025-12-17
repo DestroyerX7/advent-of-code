@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -158,26 +159,24 @@ public partial class Program
             Stopwatch stopwatch = Stopwatch.StartNew();
 
             object partOneAnswer = solver.SolvePartOne(input);
-            double partOneTime = stopwatch.ElapsedMilliseconds / 1000d;
-            partOneTime = double.Round(partOneTime, 3);
+            long partOneTime = stopwatch.ElapsedMilliseconds;
 
             Write("Part One : ", ConsoleColor.Magenta);
             Write(partOneAnswer);
-            WriteLine($" ({partOneTime}s)", ConsoleColor.Cyan);
+            WriteLine($" ({partOneTime} ms)", GetColorBySolveTime(partOneTime));
 
             object partTwoAnswer = solver.SolvePartTwo(input);
 
             stopwatch.Stop();
 
-            double partTwoTime = stopwatch.ElapsedMilliseconds / 1000d - partOneTime;
-            partTwoTime = double.Round(partTwoTime, 3);
+            long partTwoTime = stopwatch.ElapsedMilliseconds - partOneTime;
 
             Write("Part Two : ", ConsoleColor.Magenta);
             Write(partTwoAnswer);
-            WriteLine($" ({partTwoTime}s)", ConsoleColor.Cyan);
+            WriteLine($" ({partTwoTime} ms)", GetColorBySolveTime(partTwoTime));
 
+            WriteLine("Solved both parts in " + stopwatch.ElapsedMilliseconds + " ms", ConsoleColor.Cyan);
             WriteLine();
-            // WriteLine("Solved both parts in " + stopwatch.ElapsedMilliseconds / 1000d + "s", ConsoleColor.Cyan);
         }
     }
 
@@ -193,6 +192,22 @@ public partial class Program
         Console.ForegroundColor = foregroundColor;
         Console.Write(obj);
         Console.ResetColor();
+    }
+
+    public static ConsoleColor GetColorBySolveTime(long solveTime)
+    {
+        if (solveTime < 500)
+        {
+            return ConsoleColor.Green;
+        }
+        else if (solveTime < 1000)
+        {
+            return ConsoleColor.Yellow;
+        }
+        else
+        {
+            return ConsoleColor.Red;
+        }
     }
 
     [GeneratedRegex(@"^\d{4}$")]

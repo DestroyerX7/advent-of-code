@@ -155,19 +155,20 @@ public partial class Solution : Solver
 
     private static int FindMin(List<string> equations, int maxTest)
     {
-        HashSet<string> freeVars = [];
+        string? freeVar = null;
 
         foreach (string equation in equations)
         {
-            MatchCollection matchCollection = _equationVarRegex.Matches(equation);
+            Match match = _equationVarRegex.Match(equation);
 
-            foreach (Match match in matchCollection)
+            if (match.Success)
             {
-                freeVars.Add(match.ToString());
+                freeVar = match.ToString();
+                break;
             }
         }
 
-        if (freeVars.Count == 0)
+        if (string.IsNullOrEmpty(freeVar))
         {
             int sum = 0;
 
@@ -203,8 +204,6 @@ public partial class Solution : Solver
 
         for (int i = 0; i <= maxTest; i++)
         {
-            string freeVar = freeVars.First();
-
             List<string> replaced = [.. equations.Select(e => e.Replace(freeVar, i.ToString()))];
 
             int result = FindMin(replaced, maxTest);

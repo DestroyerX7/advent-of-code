@@ -1,3 +1,5 @@
+using System;
+
 namespace AdventOfCode.Year2024.Day12;
 
 public class Grid
@@ -144,5 +146,17 @@ public struct Vector2
     public override string ToString()
     {
         return $"({X}, {Y})";
+    }
+
+    // Added in 2025 to stop termianl warning
+    public readonly override bool Equals(object? obj)
+    {
+        return obj is Vector2 vector && vector.Equals(this);
+    }
+
+    // Added in 2025 to stop termianl warning
+    public readonly override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y);
     }
 }
