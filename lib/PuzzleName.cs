@@ -1,6 +1,6 @@
 using System;
 
-namespace AdventOfCode;
+namespace AdventOfCode.Lib;
 
 public class PuzzleName(string name) : Attribute
 {

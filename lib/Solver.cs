@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace AdventOfCode;
+namespace AdventOfCode.Lib;
 
 public abstract class Solver
 {

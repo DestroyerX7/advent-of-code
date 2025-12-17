@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using AdventOfCode.Lib;
 
 namespace AdventOfCode.Year2025.Day10;
 
@@ -72,6 +73,10 @@ public partial class Solution : Solver
         return totalPresses;
     }
 
+    // This reddit post helped a little
+    // https://www.reddit.com/r/adventofcode/comments/1pjghln/2025_day_10_part_2_is_the_problem_possible_to/
+    // I was already on the right track using matrix row reduction
+    // But this confirmed it and told me to brute force the number of presses once I had the equations with free vars
     public override object SolvePartTwo(string[] input)
     {
         int totalPresses = 0;

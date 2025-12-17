@@ -1,3 +1,5 @@
+using AdventOfCode.Lib;
+
 namespace AdventOfCode.Year2024.Day10;
 
 [PuzzleName("Hoof It")]

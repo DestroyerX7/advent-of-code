@@ -6,6 +6,8 @@ public class SolutionGenerator
     {
         return
         $$"""
+        using AdventOfCode.Lib;
+
         namespace AdventOfCode.Year{{year}}.Day{{day}};
 
         [PuzzleName("")]

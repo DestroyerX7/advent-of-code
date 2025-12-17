@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -133,9 +132,8 @@ public partial class Program
             return;
         }
 
-        string previousYear = year;
-        WriteLine("Year " + year);
-        WriteLine();
+        string previousYear = "";
+        Stopwatch stopwatch = new();
 
         foreach (Solver solver in solvers)
         {
@@ -144,19 +142,20 @@ public partial class Program
 
             if (year != previousYear)
             {
+                WriteLine("-------------------------");
                 WriteLine("Year " + year);
-                // WriteLine("==========");
+                WriteLine("-------------------------");
                 WriteLine();
-            }
 
-            previousYear = year;
+                previousYear = year;
+            }
 
             WriteLine($"Day {solver.GetDay()} : {solver.GetName()}", ConsoleColor.Green);
 
             string inputPath = Path.Combine($"year-{year}", $"day-{day}", "input.in");
             string[] input = File.ReadAllLines(inputPath);
 
-            Stopwatch stopwatch = Stopwatch.StartNew();
+            stopwatch.Start();
 
             object partOneAnswer = solver.SolvePartOne(input);
             long partOneTime = stopwatch.ElapsedMilliseconds;
@@ -175,8 +174,10 @@ public partial class Program
             Write(partTwoAnswer);
             WriteLine($" ({partTwoTime} ms)", GetColorBySolveTime(partTwoTime));
 
-            WriteLine("Solved both parts in " + stopwatch.ElapsedMilliseconds + " ms", ConsoleColor.Cyan);
+            WriteLine($"Solved both parts in {stopwatch.ElapsedMilliseconds} ms", ConsoleColor.Cyan);
             WriteLine();
+
+            stopwatch.Reset();
         }
     }
 

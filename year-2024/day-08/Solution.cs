@@ -1,3 +1,5 @@
+using AdventOfCode.Lib;
+
 namespace AdventOfCode.Year2024.Day08;
 
 [PuzzleName("Resonant Collinearity")]

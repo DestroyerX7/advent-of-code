@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using AdventOfCode.Lib;
 
 namespace AdventOfCode.Year2025.Day03;
 

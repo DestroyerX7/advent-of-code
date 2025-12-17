@@ -1,3 +1,5 @@
+using AdventOfCode.Lib;
+
 namespace AdventOfCode.Year2025.Day01;
 
 [PuzzleName("Secret Entrance")]
