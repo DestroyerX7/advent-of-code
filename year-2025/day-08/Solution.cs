@@ -157,8 +157,3 @@ public struct Connection
         return $"{PosOne} <===> {PosTwo}";
     }
 }
-
-public class Circuit
-{
-    public HashSet<Vector3> Positions = [];
-}
