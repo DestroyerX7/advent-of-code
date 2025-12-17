@@ -58,7 +58,7 @@ public class Solution : Solver
 
     public override object SolvePartTwo(string[] input)
     {
-        return "Not Attempted Yet";
+        return "Not Solved Yet";
     }
 }
 

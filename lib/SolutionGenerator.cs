@@ -15,12 +15,12 @@ public class SolutionGenerator
         {
             public override object SolvePartOne(string[] input)
             {
-                return "Not Attempted Yet";
+                return "Not Solved Yet";
             }
 
             public override object SolvePartTwo(string[] input)
             {
-                return "Not Attempted Yet";
+                return "Not Solved Yet";
             }
         }
         """;
