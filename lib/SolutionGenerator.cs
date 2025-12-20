@@ -23,6 +23,7 @@ public class SolutionGenerator
                 return "Not Solved Yet";
             }
         }
+        
         """;
     }
 }
