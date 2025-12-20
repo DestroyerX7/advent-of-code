@@ -23,6 +23,8 @@ public partial class Program
 
     private static async Task Run(string[] args)
     {
+        // Solve("2025", "09");
+        // return;
         DateTime utcNow = DateTime.UtcNow.AddHours(-5);
 
         if (args.Length == 1 && args[0] == "today")
@@ -154,6 +156,7 @@ public partial class Program
 
             string inputPath = Path.Combine($"year-{year}", $"day-{day}", "input.in");
             string[] input = File.ReadAllLines(inputPath);
+            // string[] input = File.ReadAllLines(@"D:\VS Code Projects\advent-of-code\year-2025\day-09\input.in");
 
             stopwatch.Start();
 
