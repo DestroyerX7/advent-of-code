@@ -140,142 +140,154 @@ public class Solution : Solver
             yValues.Add(posTwo.Y);
         }
 
-        List<int> yo = [.. xValues.OrderBy(x => x)];
-        List<int> hi = [.. yValues.OrderBy(y => y)];
+        List<int> sortedXValues = [.. xValues.OrderBy(x => x)];
+        List<int> sortedYValues = [.. yValues.OrderBy(y => y)];
 
         List<Wall> segments = [];
 
-        foreach (int y in hi)
+        foreach (int y in sortedYValues)
         {
             Stack<Vector2> stack = [];
-            Vector2 lastInPos = default;
-            bool foundIn = false;
+            Vector2 enteredPos = -Vector2.One;
 
-            foreach (int x in yo)
+            foreach (int x in sortedXValues)
             {
                 Vector2 pos = new(x, y);
 
-                if (stack.Count > 0)
+                if (stack.Count == 0)
                 {
-                    Wall wallOne = new(stack.Peek(), pos);
-                    segments.Add(wallOne);
-                    // System.Console.WriteLine(wallOne);
-
-                    if (foundIn)
+                    if (dict.ContainsKey(pos) && (dict[pos] == CornerType.TopLeft || dict[pos] == CornerType.BottomLeft))
                     {
-                        Wall wallTwo = new(lastInPos, pos);
-                        segments.Add(wallTwo);
-                        // System.Console.WriteLine(wallTwo);
-                    }
-
-                    lastInPos = pos;
-                    foundIn = true;
-                }
-
-                if (stack.Count == 0 && dict.ContainsKey(pos) && (dict[pos] == CornerType.TopLeft || dict[pos] == CornerType.BottomLeft))
-                {
-                    // if not in shape and hit an enter corner mark enter as true
-                    // System.Console.Write(pos);
-                    // System.Console.WriteLine(" Entered");
-                    stack.Push(pos);
-                    foundIn = false;
-                }
-                else if (stack.Count > 0 && dict.ContainsKey(pos))
-                {
-                    // if in shape and hit an exit corner mark enter as false
-                    var popped = stack.Peek();
-
-                    if ((!dict.ContainsKey(popped) && (dict[pos] == CornerType.TopRight || dict[pos] == CornerType.BottomRight)) || (dict.ContainsKey(popped) && dict[popped] == CornerType.TopLeft && dict[pos] == CornerType.TopRight) || (dict.ContainsKey(popped) && dict[popped] == CornerType.BottomLeft && dict[pos] == CornerType.BottomRight))
-                    {
-                        // System.Console.Write(pos);
-                        // System.Console.WriteLine(" Exited");
-                        stack.Pop();
-                    }
-                }
-                else if (verticalWalls[x].Any(w => w.Intersects(pos)))
-                {
-                    // Check is pos intersects a wall
-
-                    if (stack.Count > 0)
-                    {
-                        stack.Pop();
-                        // System.Console.Write(pos);
-                        // System.Console.WriteLine(" Exited");
-                    }
-                    else
-                    {
+                        enteredPos = pos;
                         stack.Push(pos);
-                        // System.Console.Write(pos);
-                        // System.Console.WriteLine(" Entered");
+                    }
+                    else if (!dict.ContainsKey(pos) && verticalWalls[x].Any(w => w.Intersects(pos)))
+                    {
+                        enteredPos = pos;
+                        stack.Push(pos);
                     }
                 }
+                else
+                {
+                    if (!dict.ContainsKey(pos) && verticalWalls[x].Any(w => w.Intersects(pos)))
+                    {
+                        stack.Clear();
+                    }
+                    else if (dict.ContainsKey(pos))
+                    {
+                        Vector2 peeked = stack.Peek();
+
+                        if (!dict.ContainsKey(peeked))
+                        {
+                            stack.Push(pos);
+                            continue;
+                        }
+
+                        if (CancelsMovingX(dict[peeked], dict[pos]))
+                        {
+                            stack.Pop();
+                        }
+                        else
+                        {
+                            stack.Push(pos);
+                        }
+
+                        if (!dict.ContainsKey(enteredPos))
+                        {
+                            bool cornersFormVerticalWall = CornersFormVerticalWall(dict[peeked], dict[pos]);
+
+                            if (cornersFormVerticalWall)
+                            {
+                                stack.Clear();
+                            }
+                        }
+                    }
+                }
+
+                if (stack.Count == 0 && enteredPos != -Vector2.One)
+                {
+                    Wall wall = new(enteredPos, pos);
+                    segments.Add(wall);
+                    enteredPos = -Vector2.One;
+                }
+            }
+
+            if (stack.Count > 0)
+            {
+                throw new System.Exception($"Never exited row {y}");
             }
         }
 
-        foreach (int x in yo)
+        foreach (int x in sortedXValues)
         {
             Stack<Vector2> stack = [];
-            Vector2 lastInPos = default;
-            bool foundIn = false;
+            Vector2 enteredPos = -Vector2.One;
 
-            foreach (int y in hi)
+            foreach (int y in sortedYValues)
             {
                 Vector2 pos = new(x, y);
 
-                if (stack.Count > 0)
+                if (stack.Count == 0)
                 {
-                    Wall wallOne = new(stack.Peek(), pos);
-                    segments.Add(wallOne);
-                    // System.Console.WriteLine(wallOne);
-
-                    if (foundIn)
+                    if (dict.ContainsKey(pos) && (dict[pos] == CornerType.TopLeft || dict[pos] == CornerType.TopRight))
                     {
-                        Wall wallTwo = new(lastInPos, pos);
-                        segments.Add(wallTwo);
-                        // System.Console.WriteLine(wallTwo);
-                    }
-
-                    lastInPos = pos;
-                    foundIn = true;
-                }
-
-                if (stack.Count == 0 && dict.ContainsKey(pos) && (dict[pos] == CornerType.TopLeft || dict[pos] == CornerType.BottomLeft))
-                {
-                    // if not in shape and hit an enter corner mark enter as true
-                    // System.Console.Write(pos);
-                    // System.Console.WriteLine(" Entered");
-                    stack.Push(pos);
-                    foundIn = false;
-                }
-                else if (stack.Count > 0 && dict.ContainsKey(pos))
-                {
-                    // if in shape and hit an exit corner mark enter as false
-                    var popped = stack.Peek();
-
-                    if ((!dict.ContainsKey(popped) && (dict[pos] == CornerType.BottomLeft || dict[pos] == CornerType.BottomRight)) || (dict.ContainsKey(popped) && dict[popped] == CornerType.TopLeft && dict[pos] == CornerType.BottomLeft) || (dict.ContainsKey(popped) && dict[popped] == CornerType.TopRight && dict[pos] == CornerType.BottomRight))
-                    {
-                        // System.Console.Write(pos);
-                        // System.Console.WriteLine(" Exited");
-                        stack.Pop();
-                    }
-                }
-                else if (horizontalWalls[y].Any(w => w.Intersects(pos)))
-                {
-                    // Check is pos intersects a wall
-
-                    if (stack.Count > 0)
-                    {
-                        stack.Pop();
-                        // System.Console.Write(pos);
-                        // System.Console.WriteLine(" Exited");
-                    }
-                    else
-                    {
+                        enteredPos = pos;
                         stack.Push(pos);
-                        // System.Console.Write(pos);
-                        // System.Console.WriteLine(" Entered");
+                    }
+                    else if (!dict.ContainsKey(pos) && horizontalWalls[y].Any(w => w.Intersects(pos)))
+                    {
+                        enteredPos = pos;
+                        stack.Push(pos);
                     }
                 }
+                else
+                {
+                    if (!dict.ContainsKey(pos) && horizontalWalls[y].Any(w => w.Intersects(pos)))
+                    {
+                        stack.Clear();
+                    }
+                    else if (dict.ContainsKey(pos))
+                    {
+                        Vector2 peeked = stack.Peek();
+
+                        if (!dict.ContainsKey(peeked))
+                        {
+                            stack.Push(pos);
+                            continue;
+                        }
+
+                        if (CancelsMovingY(dict[peeked], dict[pos]))
+                        {
+                            stack.Pop();
+                        }
+                        else
+                        {
+                            stack.Push(pos);
+                        }
+
+                        if (!dict.ContainsKey(enteredPos))
+                        {
+                            bool cornersFormHorizontalWall = CornersFormHorizontalWall(dict[peeked], dict[pos]);
+
+                            if (cornersFormHorizontalWall)
+                            {
+                                stack.Clear();
+                            }
+                        }
+                    }
+                }
+
+                if (stack.Count == 0 && enteredPos != -Vector2.One)
+                {
+                    Wall wall = new(enteredPos, pos);
+                    segments.Add(wall);
+                    enteredPos = -Vector2.One;
+                }
+            }
+
+            if (stack.Count > 0)
+            {
+                throw new System.Exception($"Never exited col {x}");
             }
         }
 
@@ -298,19 +310,18 @@ public class Solution : Solver
             Vector2 what = pair[0];
             Vector2 wtf = pair[1];
 
-            bool one = segments.Any(s => s.IsPos(what) && s.IsPos(new(wtf.X, what.Y)));
-            bool two = segments.Any(s => s.IsPos(what) && s.IsPos(new(what.X, wtf.Y)));
-            bool three = segments.Any(s => s.IsPos(new(what.X, wtf.Y)) && s.IsPos(wtf));
-            bool four = segments.Any(s => s.IsPos(new(wtf.X, what.Y)) && s.IsPos(wtf));
+            bool one = segments.Any(w => w.Intersects(what) && w.Intersects(new(wtf.X, what.Y)));
+            bool two = segments.Any(w => w.Intersects(what) && w.Intersects(new(what.X, wtf.Y)));
+            bool three = segments.Any(w => w.Intersects(wtf) && w.Intersects(new(what.X, wtf.Y)));
+            bool four = segments.Any(w => w.Intersects(wtf) && w.Intersects(new(wtf.X, what.Y)));
 
             if (one && two && three && four)
             {
                 long width = Math.Abs(what.X - wtf.X) + 1;
                 long height = Math.Abs(what.Y - wtf.Y) + 1;
 
-                System.Console.WriteLine(what);
-                System.Console.WriteLine(wtf);
-                System.Console.WriteLine();
+                // System.Console.WriteLine(what);
+                // System.Console.WriteLine(wtf);
 
                 return width * height;
             }
@@ -318,17 +329,133 @@ public class Solution : Solver
 
         return -1;
     }
+
+    private void PrintCornerType(CornerType cornerType)
+    {
+        if (cornerType == CornerType.TopLeft)
+        {
+            System.Console.Write("┏");
+        }
+        else if (cornerType == CornerType.TopRight)
+        {
+            System.Console.Write("┑");
+        }
+        else if (cornerType == CornerType.BottomRight)
+        {
+            System.Console.Write("┙");
+        }
+        else
+        {
+            System.Console.Write("┗");
+        }
+    }
+
+    private static bool CancelsMovingX(CornerType cornerTypeOne, CornerType cornerTypeTwo)
+    {
+        if (cornerTypeOne == CornerType.TopLeft && cornerTypeTwo == CornerType.TopRight)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.TopLeft && cornerTypeOne == CornerType.TopRight)
+        {
+            return true;
+        }
+        else if (cornerTypeOne == CornerType.BottomLeft && cornerTypeTwo == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.BottomLeft && cornerTypeOne == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private static bool CancelsMovingY(CornerType cornerTypeOne, CornerType cornerTypeTwo)
+    {
+        if (cornerTypeOne == CornerType.TopLeft && cornerTypeTwo == CornerType.BottomLeft)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.TopLeft && cornerTypeOne == CornerType.BottomLeft)
+        {
+            return true;
+        }
+        else if (cornerTypeOne == CornerType.TopRight && cornerTypeTwo == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.TopRight && cornerTypeOne == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private static bool CornersFormVerticalWall(CornerType cornerTypeOne, CornerType cornerTypeTwo)
+    {
+        if (cornerTypeOne == CornerType.BottomLeft && cornerTypeTwo == CornerType.TopRight)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.BottomLeft && cornerTypeOne == CornerType.TopRight)
+        {
+            return true;
+        }
+        else if (cornerTypeOne == CornerType.TopLeft && cornerTypeTwo == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.TopLeft && cornerTypeOne == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private static bool CornersFormHorizontalWall(CornerType cornerTypeOne, CornerType cornerTypeTwo)
+    {
+        if (cornerTypeOne == CornerType.BottomLeft && cornerTypeTwo == CornerType.TopRight)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.BottomLeft && cornerTypeOne == CornerType.TopRight)
+        {
+            return true;
+        }
+        else if (cornerTypeOne == CornerType.TopLeft && cornerTypeTwo == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else if (cornerTypeTwo == CornerType.TopLeft && cornerTypeOne == CornerType.BottomRight)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 }
 
-public class Wall(Vector2 redTileone, Vector2 redTileTwo)
+public struct Wall(Vector2 redTileone, Vector2 redTileTwo)
 {
     public Vector2 RedTileOne = redTileone;
     public Vector2 RedTileTwo = redTileTwo;
 
-    public bool IsVertical => RedTileOne.X == RedTileTwo.X;
-    public bool IsHorizontal => RedTileOne.Y == RedTileTwo.Y;
+    public readonly bool IsVertical => RedTileOne.X == RedTileTwo.X;
+    public readonly bool IsHorizontal => RedTileOne.Y == RedTileTwo.Y;
 
-    public bool Intersects(Vector2 pos)
+    public readonly bool Intersects(Vector2 pos)
     {
         if (pos.X == RedTileOne.X)
         {
@@ -349,12 +476,12 @@ public class Wall(Vector2 redTileone, Vector2 redTileTwo)
         return false;
     }
 
-    public bool IsPos(Vector2 pos)
+    public readonly bool IsPos(Vector2 pos)
     {
         return RedTileOne == pos || RedTileTwo == pos;
     }
 
-    public override string ToString()
+    public readonly override string ToString()
     {
         return RedTileOne.ToString() + "-----" + RedTileTwo.ToString();
     }

@@ -49,6 +49,11 @@ public struct Vector3(int x, int y, int z) : IEquatable<Vector3>
         return new(vectorOne.X - vectorTwo.X, vectorOne.Y - vectorTwo.Y, vectorOne.Z - vectorTwo.Z);
     }
 
+    public static Vector3 operator -(Vector3 vector)
+    {
+        return new(-vector.X, -vector.Y, -vector.Z);
+    }
+
     public readonly override int GetHashCode()
     {
         return HashCode.Combine(X, Y, Z);

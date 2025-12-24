@@ -46,6 +46,11 @@ public struct Vector2(int x, int y) : IEquatable<Vector2>
         return new(vectorOne.X - vectorTwo.X, vectorOne.Y - vectorTwo.Y);
     }
 
+    public static Vector2 operator -(Vector2 vector)
+    {
+        return new(-vector.X, -vector.Y);
+    }
+
     public readonly override int GetHashCode()
     {
         return HashCode.Combine(X, Y);
