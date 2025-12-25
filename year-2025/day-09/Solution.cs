@@ -46,8 +46,9 @@ public class Solution : Solver
             redTilePositions.Add(redTilePos);
         }
 
-        Dictionary<Vector2, CornerType> dict = [];
+        Dictionary<Vector2, CornerType> posToCornerType = [];
 
+        // Determines what each red tiles corner type is and adds it to the dictionary
         for (int i = 0; i < redTilePositions.Count; i++)
         {
             Vector2 current = redTilePositions[i];
@@ -57,54 +58,49 @@ public class Solution : Solver
             if (next.Y == current.Y && next.X > current.X && prev.Y < current.Y)
             {
                 // BL
-                dict[current] = CornerType.BottomLeft;
+                posToCornerType[current] = CornerType.BottomLeft;
             }
             else if (next.Y == current.Y && next.X > current.X && prev.Y > current.Y)
             {
                 // TL
-                dict[current] = CornerType.TopLeft;
+                posToCornerType[current] = CornerType.TopLeft;
             }
-
-            if (prev.Y == current.Y && prev.X > current.X && next.Y < current.Y)
+            else if (prev.Y == current.Y && prev.X > current.X && next.Y < current.Y)
             {
                 // BL
-                dict[current] = CornerType.BottomLeft;
+                posToCornerType[current] = CornerType.BottomLeft;
             }
             else if (prev.Y == current.Y && prev.X > current.X && next.Y > current.Y)
             {
                 // TL
-                dict[current] = CornerType.TopLeft;
+                posToCornerType[current] = CornerType.TopLeft;
             }
-
-            if (next.Y == current.Y && next.X < current.X && prev.Y < current.Y)
+            else if (next.Y == current.Y && next.X < current.X && prev.Y < current.Y)
             {
                 // BR
-                dict[current] = CornerType.BottomRight;
+                posToCornerType[current] = CornerType.BottomRight;
             }
             else if (next.Y == current.Y && next.X < current.X && prev.Y > current.Y)
             {
                 // TR
-                dict[current] = CornerType.TopRight;
+                posToCornerType[current] = CornerType.TopRight;
             }
-
-            if (prev.Y == current.Y && prev.X < current.X && next.Y < current.Y)
+            else if (prev.Y == current.Y && prev.X < current.X && next.Y < current.Y)
             {
                 // BR
-                dict[current] = CornerType.BottomRight;
+                posToCornerType[current] = CornerType.BottomRight;
             }
             else if (prev.Y == current.Y && prev.X < current.X && next.Y > current.Y)
             {
                 // TR
-                dict[current] = CornerType.TopRight;
+                posToCornerType[current] = CornerType.TopRight;
             }
         }
 
         Dictionary<int, List<Wall>> verticalWalls = [];
         Dictionary<int, List<Wall>> horizontalWalls = [];
 
-        HashSet<int> xValues = [];
-        HashSet<int> yValues = [];
-
+        // Groups vertical and horizontal walls by x and y value
         for (int i = 0; i < redTilePositions.Count + 1; i++)
         {
             Vector2 posOne = redTilePositions[i % redTilePositions.Count];
@@ -113,9 +109,9 @@ public class Solution : Solver
 
             if (wall.IsVertical)
             {
-                if (verticalWalls.ContainsKey(wall.RedTileOne.X))
+                if (verticalWalls.TryGetValue(wall.RedTileOne.X, out List<Wall>? value))
                 {
-                    verticalWalls[wall.RedTileOne.X].Add(wall);
+                    value.Add(wall);
                 }
                 else
                 {
@@ -124,44 +120,41 @@ public class Solution : Solver
             }
             else
             {
-                if (horizontalWalls.ContainsKey(wall.RedTileOne.Y))
+                if (horizontalWalls.TryGetValue(wall.RedTileOne.Y, out List<Wall>? value))
                 {
-                    horizontalWalls[wall.RedTileOne.Y].Add(wall);
+                    value.Add(wall);
                 }
                 else
                 {
                     horizontalWalls[wall.RedTileOne.Y] = [wall];
                 }
             }
-
-            xValues.Add(posOne.X);
-            xValues.Add(posTwo.X);
-            yValues.Add(posOne.Y);
-            yValues.Add(posTwo.Y);
         }
 
-        List<int> sortedXValues = [.. xValues.OrderBy(x => x)];
-        List<int> sortedYValues = [.. yValues.OrderBy(y => y)];
+        List<int> xValues = [.. verticalWalls.Select(k => k.Key).OrderBy(x => x)];
+        List<int> yValues = [.. horizontalWalls.Select(k => k.Key).OrderBy(y => y)];
 
         List<Wall> segments = [];
 
-        foreach (int y in sortedYValues)
+        // Goes through each y value and adds full horizontal walls that are in the shape
+        foreach (int y in yValues)
         {
             Stack<Vector2> stack = [];
             Vector2 enteredPos = -Vector2.One;
 
-            foreach (int x in sortedXValues)
+            foreach (int x in xValues)
             {
                 Vector2 pos = new(x, y);
+                bool posIsCorner = posToCornerType.ContainsKey(pos);
 
                 if (stack.Count == 0)
                 {
-                    if (dict.ContainsKey(pos) && (dict[pos] == CornerType.TopLeft || dict[pos] == CornerType.BottomLeft))
+                    if (posIsCorner)
                     {
                         enteredPos = pos;
                         stack.Push(pos);
                     }
-                    else if (!dict.ContainsKey(pos) && verticalWalls[x].Any(w => w.Intersects(pos)))
+                    else if (verticalWalls[x].Any(w => w.Intersects(pos)))
                     {
                         enteredPos = pos;
                         stack.Push(pos);
@@ -169,21 +162,17 @@ public class Solution : Solver
                 }
                 else
                 {
-                    if (!dict.ContainsKey(pos) && verticalWalls[x].Any(w => w.Intersects(pos)))
-                    {
-                        stack.Clear();
-                    }
-                    else if (dict.ContainsKey(pos))
+                    if (posIsCorner)
                     {
                         Vector2 peeked = stack.Peek();
 
-                        if (!dict.ContainsKey(peeked))
+                        if (!posToCornerType.ContainsKey(peeked))
                         {
                             stack.Push(pos);
                             continue;
                         }
 
-                        if (CancelsMovingX(dict[peeked], dict[pos]))
+                        if (CancelsMovingX(posToCornerType[peeked], posToCornerType[pos]))
                         {
                             stack.Pop();
                         }
@@ -192,9 +181,9 @@ public class Solution : Solver
                             stack.Push(pos);
                         }
 
-                        if (!dict.ContainsKey(enteredPos))
+                        if (!posToCornerType.ContainsKey(enteredPos))
                         {
-                            bool cornersFormVerticalWall = CornersFormVerticalWall(dict[peeked], dict[pos]);
+                            bool cornersFormVerticalWall = CornersFormWall(posToCornerType[peeked], posToCornerType[pos]);
 
                             if (cornersFormVerticalWall)
                             {
@@ -202,6 +191,10 @@ public class Solution : Solver
                             }
                         }
                     }
+                    else if (verticalWalls[x].Any(w => w.Intersects(pos)))
+                    {
+                        stack.Clear();
+                    }
                 }
 
                 if (stack.Count == 0 && enteredPos != -Vector2.One)
@@ -214,27 +207,29 @@ public class Solution : Solver
 
             if (stack.Count > 0)
             {
-                throw new System.Exception($"Never exited row {y}");
+                throw new Exception($"Never exited row {y}");
             }
         }
 
-        foreach (int x in sortedXValues)
+        // Goes through each x value and adds full vertical walls that are in the shape
+        foreach (int x in xValues)
         {
             Stack<Vector2> stack = [];
             Vector2 enteredPos = -Vector2.One;
 
-            foreach (int y in sortedYValues)
+            foreach (int y in yValues)
             {
                 Vector2 pos = new(x, y);
+                bool posIsCorner = posToCornerType.ContainsKey(pos);
 
                 if (stack.Count == 0)
                 {
-                    if (dict.ContainsKey(pos) && (dict[pos] == CornerType.TopLeft || dict[pos] == CornerType.TopRight))
+                    if (posIsCorner)
                     {
                         enteredPos = pos;
                         stack.Push(pos);
                     }
-                    else if (!dict.ContainsKey(pos) && horizontalWalls[y].Any(w => w.Intersects(pos)))
+                    else if (horizontalWalls[y].Any(w => w.Intersects(pos)))
                     {
                         enteredPos = pos;
                         stack.Push(pos);
@@ -242,21 +237,17 @@ public class Solution : Solver
                 }
                 else
                 {
-                    if (!dict.ContainsKey(pos) && horizontalWalls[y].Any(w => w.Intersects(pos)))
-                    {
-                        stack.Clear();
-                    }
-                    else if (dict.ContainsKey(pos))
+                    if (posIsCorner)
                     {
                         Vector2 peeked = stack.Peek();
 
-                        if (!dict.ContainsKey(peeked))
+                        if (!posToCornerType.ContainsKey(peeked))
                         {
                             stack.Push(pos);
                             continue;
                         }
 
-                        if (CancelsMovingY(dict[peeked], dict[pos]))
+                        if (CancelsMovingY(posToCornerType[peeked], posToCornerType[pos]))
                         {
                             stack.Pop();
                         }
@@ -265,15 +256,19 @@ public class Solution : Solver
                             stack.Push(pos);
                         }
 
-                        if (!dict.ContainsKey(enteredPos))
+                        if (!posToCornerType.ContainsKey(enteredPos))
                         {
-                            bool cornersFormHorizontalWall = CornersFormHorizontalWall(dict[peeked], dict[pos]);
+                            bool cornersFormHorizontalWall = CornersFormWall(posToCornerType[peeked], posToCornerType[pos]);
 
                             if (cornersFormHorizontalWall)
                             {
                                 stack.Clear();
                             }
                         }
+                    }
+                    else if (horizontalWalls[y].Any(w => w.Intersects(pos)))
+                    {
+                        stack.Clear();
                     }
                 }
 
@@ -287,11 +282,11 @@ public class Solution : Solver
 
             if (stack.Count > 0)
             {
-                throw new System.Exception($"Never exited col {x}");
+                throw new Exception($"Never exited col {x}");
             }
         }
 
-        PriorityQueue<Vector2[], long> priorityQueue = new();
+        PriorityQueue<(Vector2, Vector2), long> priorityQueue = new();
 
         for (int i = 0; i < redTilePositions.Count; i++)
         {
@@ -299,29 +294,26 @@ public class Solution : Solver
             {
                 long width = Math.Abs(redTilePositions[i].X - redTilePositions[j].X) + 1;
                 long height = Math.Abs(redTilePositions[i].Y - redTilePositions[j].Y) + 1;
-                priorityQueue.Enqueue([redTilePositions[i], redTilePositions[j]], -width * height);
+                priorityQueue.Enqueue((redTilePositions[i], redTilePositions[j]), -width * height);
             }
         }
 
         while (priorityQueue.Count > 0)
         {
-            Vector2[] pair = priorityQueue.Dequeue();
+            (Vector2, Vector2) pair = priorityQueue.Dequeue();
 
-            Vector2 what = pair[0];
-            Vector2 wtf = pair[1];
+            Vector2 posOne = pair.Item1;
+            Vector2 posTwo = pair.Item2;
 
-            bool one = segments.Any(w => w.Intersects(what) && w.Intersects(new(wtf.X, what.Y)));
-            bool two = segments.Any(w => w.Intersects(what) && w.Intersects(new(what.X, wtf.Y)));
-            bool three = segments.Any(w => w.Intersects(wtf) && w.Intersects(new(what.X, wtf.Y)));
-            bool four = segments.Any(w => w.Intersects(wtf) && w.Intersects(new(wtf.X, what.Y)));
+            bool existsWallOne = segments.Any(w => w.Intersects(posOne) && w.Intersects(new(posTwo.X, posOne.Y)));
+            bool existsWallTwo = segments.Any(w => w.Intersects(posOne) && w.Intersects(new(posOne.X, posTwo.Y)));
+            bool existsWallThree = segments.Any(w => w.Intersects(posTwo) && w.Intersects(new(posOne.X, posTwo.Y)));
+            bool existsWallFour = segments.Any(w => w.Intersects(posTwo) && w.Intersects(new(posTwo.X, posOne.Y)));
 
-            if (one && two && three && four)
+            if (existsWallOne && existsWallTwo && existsWallThree && existsWallFour)
             {
-                long width = Math.Abs(what.X - wtf.X) + 1;
-                long height = Math.Abs(what.Y - wtf.Y) + 1;
-
-                // System.Console.WriteLine(what);
-                // System.Console.WriteLine(wtf);
+                long width = Math.Abs(posOne.X - posTwo.X) + 1;
+                long height = Math.Abs(posOne.Y - posTwo.Y) + 1;
 
                 return width * height;
             }
@@ -330,23 +322,23 @@ public class Solution : Solver
         return -1;
     }
 
-    private void PrintCornerType(CornerType cornerType)
+    private static void PrintCornerType(CornerType cornerType)
     {
         if (cornerType == CornerType.TopLeft)
         {
-            System.Console.Write("┏");
+            Console.Write("┏");
         }
         else if (cornerType == CornerType.TopRight)
         {
-            System.Console.Write("┑");
+            Console.Write("┓");
         }
         else if (cornerType == CornerType.BottomRight)
         {
-            System.Console.Write("┙");
+            Console.Write("┛");
         }
         else
         {
-            System.Console.Write("┗");
+            Console.Write("┗");
         }
     }
 
@@ -398,31 +390,7 @@ public class Solution : Solver
         }
     }
 
-    private static bool CornersFormVerticalWall(CornerType cornerTypeOne, CornerType cornerTypeTwo)
-    {
-        if (cornerTypeOne == CornerType.BottomLeft && cornerTypeTwo == CornerType.TopRight)
-        {
-            return true;
-        }
-        else if (cornerTypeTwo == CornerType.BottomLeft && cornerTypeOne == CornerType.TopRight)
-        {
-            return true;
-        }
-        else if (cornerTypeOne == CornerType.TopLeft && cornerTypeTwo == CornerType.BottomRight)
-        {
-            return true;
-        }
-        else if (cornerTypeTwo == CornerType.TopLeft && cornerTypeOne == CornerType.BottomRight)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    private static bool CornersFormHorizontalWall(CornerType cornerTypeOne, CornerType cornerTypeTwo)
+    private static bool CornersFormWall(CornerType cornerTypeOne, CornerType cornerTypeTwo)
     {
         if (cornerTypeOne == CornerType.BottomLeft && cornerTypeTwo == CornerType.TopRight)
         {
@@ -474,11 +442,6 @@ public struct Wall(Vector2 redTileone, Vector2 redTileTwo)
         }
 
         return false;
-    }
-
-    public readonly bool IsPos(Vector2 pos)
-    {
-        return RedTileOne == pos || RedTileTwo == pos;
     }
 
     public readonly override string ToString()
