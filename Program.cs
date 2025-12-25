@@ -23,8 +23,6 @@ public partial class Program
 
     private static async Task Run(string[] args)
     {
-        // Solve("2025", "09");
-        // return;
         DateTime utcNow = DateTime.UtcNow.AddHours(-5);
 
         if (args.Length == 1 && args[0] == "today")
@@ -156,28 +154,29 @@ public partial class Program
 
             string inputPath = Path.Combine($"year-{year}", $"day-{day}", "input.in");
             string[] input = File.ReadAllLines(inputPath);
-            // string[] input = File.ReadAllLines(@"D:\VS Code Projects\advent-of-code\year-2025\day-09\input.in");
 
             stopwatch.Start();
-
             object partOneAnswer = solver.SolvePartOne(input);
-            long partOneTime = stopwatch.ElapsedMilliseconds;
+            stopwatch.Stop();
+
+            double partOneTime = double.Round(stopwatch.Elapsed.TotalMilliseconds, 3);
 
             Write("Part One : ", ConsoleColor.Magenta);
             Write(partOneAnswer);
             WriteLine($" ({partOneTime} ms)", GetColorBySolveTime(partOneTime));
 
+            stopwatch.Restart();
             object partTwoAnswer = solver.SolvePartTwo(input);
-
             stopwatch.Stop();
 
-            long partTwoTime = stopwatch.ElapsedMilliseconds - partOneTime;
+            double partTwoTime = double.Round(stopwatch.Elapsed.TotalMilliseconds, 3);
 
             Write("Part Two : ", ConsoleColor.Magenta);
             Write(partTwoAnswer);
             WriteLine($" ({partTwoTime} ms)", GetColorBySolveTime(partTwoTime));
 
-            WriteLine($"Solved both parts in {stopwatch.ElapsedMilliseconds} ms", ConsoleColor.Cyan);
+            double bothPartsTime = double.Round(partOneTime + partTwoTime, 3);
+            WriteLine($"Solved both parts in {bothPartsTime} ms", ConsoleColor.Cyan);
             WriteLine();
 
             stopwatch.Reset();
@@ -198,7 +197,7 @@ public partial class Program
         Console.ResetColor();
     }
 
-    public static ConsoleColor GetColorBySolveTime(long solveTime)
+    public static ConsoleColor GetColorBySolveTime(double solveTime)
     {
         if (solveTime < 500)
         {
