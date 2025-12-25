@@ -54,6 +54,26 @@ public struct Vector3(int x, int y, int z) : IEquatable<Vector3>
         return new(-vector.X, -vector.Y, -vector.Z);
     }
 
+    public static Vector3 operator *(Vector3 vector, int num)
+    {
+        return new(vector.X * num, vector.Y * num, vector.Z * num);
+    }
+
+    public static Vector3 operator *(int num, Vector3 vector)
+    {
+        return vector * num;
+    }
+
+    public static Vector3 operator /(Vector3 vector, int num)
+    {
+        return new(vector.X / num, vector.Y / num, vector.Z / num);
+    }
+
+    public static Vector3 operator /(int num, Vector3 vector)
+    {
+        return vector / num;
+    }
+
     public readonly override int GetHashCode()
     {
         return HashCode.Combine(X, Y, Z);
